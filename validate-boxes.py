@@ -27,7 +27,11 @@ if __name__ == "__main__":
             y2 = int(box_center_y + box_height/2.0)
 
             color = (0,0,255) if clas == 0 else (255,0,0)
-            cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+            cv2.rectangle(img, (x1, y1), (x2, y2), color, 6)
 
     from os import path
-    cv2.imshow(path.basename(args.image_path), img)
+    win_name = path.basename(args.image_path)
+    cv2.namedWindow(win_name, cv2.WINDOW_NORMAL)
+    cv2.imshow(win_name, img)
+    cv2.resizeWindow(win_name, 1280, 800)
+    cv2.waitKey()
