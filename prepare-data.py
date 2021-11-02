@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from subprocess import check_output
 from os import path, makedirs
 from glob import glob
@@ -49,7 +51,7 @@ with open("statues_labels.csv", "r") as infile:
         width, height, xmin, ymin, xmax, ymax = float(width), float(height), float(xmin), float(ymin), float(xmax), float(ymax)
 
         # Label to numeric tag, YoloV5 format
-        clas_num = {"other":"0", "lenin":"1"}[clas]
+        clas_num = "0" # {"other":"0", "lenin":"1"}[clas]
 
         # Convert box coordinates to YoloV5 format
         box_width  = (xmax - xmin)/width
