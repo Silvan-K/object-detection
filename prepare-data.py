@@ -6,78 +6,142 @@ from glob import glob
 from shutil import copyfile, rmtree
 import csv
 import gdown
+from random import Random
 
-# Download/unzip data using the links provided in email
-if not path.exists("statues_labels.csv"):
-    gdown.download(id="18idZeW3IS1aUqXMypltL_WpZxa0C5opf")
-if not path.exists("statues-train"):
-    if not path.exists("statues-train.zip"):
-        gdown.download(id="1NpTPzQvkAyh9YPS8v_i7z_EZjRy9lYGs")
-    print(check_output("unzip -o statues-train.zip".split()).decode("utf-8"))
+def download_unzip_images():
 
-# Move images into directories as required by YoloV5. Note: need to
-# prefix image names with tag becaues file names are not unique.
-makedirs("./datasets/statues/images/train/", exist_ok=True)
-lenin_paths = glob("statues-train/statues-lenin/*")
-other_paths = glob("statues-train/statues-other/*")
-lenin_names = [path.basename(p) for p in lenin_paths]
-other_names = [path.basename(p) for p in other_paths]
+    # Only re-download and unzip if extracted folder is absent present
+    if not path.exists("statues-train"):
+        if not path.exists("statues-train.zip"):
+            gdown.download(id="1NpTPzQvkAyh9YPS8v_i7z_EZjRy9lYGs")
+        check_output("unzip -o statues-train.zip".split()).decode("utf-8")
 
-# Check duplicates. Saw that identical filename may appear both in
-# lenin and in other directory, sometimes corresponding to identical
-# pictures, sometimes not. Hence, make filenames unique below by
-# prepending annotation tag.
-duplicates = [name for name in lenin_names if name in other_names]
-print("Duplicate file names:", duplicates)
+    # Return paths to extracted images
+    lenin_paths = glob("statues-train/statues-lenin/*")
+    other_paths = glob("statues-train/statues-other/*")
+    return other_paths, lenin_paths
 
-new_lenin_paths = ["./datasets/statues/images/train/lenin-"+
-                   name for name in lenin_names]
-new_other_paths = ["./datasets/statues/images/train/other-"+
-                   name for name in other_names]
-for old_path, new_path in zip(lenin_paths, new_lenin_paths):
-    copyfile(old_path, new_path)
-for old_path, new_path in zip(other_paths, new_other_paths):
-    copyfile(old_path, new_path)
+def download_convert_labels():
 
-# Save annotations in YoloV5 format
-rmtree("./datasets/statues/labels/train/", ignore_errors=True)
-makedirs("./datasets/statues/labels/train/", exist_ok=True)
-with open("statues_labels.csv", "r") as infile:
-    reader = csv.reader(infile)
-    content = next(reader)
-    assert content == ["filename", "width", "height", "class", "xmin", "ymin", "xmax", "ymax"]
+    # Return value of this function: dictionary mapping file names to
+    # label strings in yolo format, each line in string corresponding
+    # to one label
+    img_label_dict = {}
+    
+    if not path.exists("statues_labels.csv"):
+        gdown.download(id="18idZeW3IS1aUqXMypltL_WpZxa0C5opf")
+        
+    with open("statues_labels.csv", "r") as infile:
+        reader = csv.reader(infile)
+        content = next(reader)
+        assert content == ["filename", "width", "height", "class", "xmin", "ymin", "xmax", "ymax"]
 
-    while True:
-        try: fname, width, height, clas, xmin, ymin, xmax, ymax = next(reader)
-        except StopIteration: break
+        while True:
+            try: fname, width, height, clas, xmin, ymin, xmax, ymax = next(reader)
+            except StopIteration: break
 
-        # Convert numeric items to float
-        width, height, xmin, ymin, xmax, ymax = float(width), float(height), float(xmin), float(ymin), float(xmax), float(ymax)
+            # Convert numeric items to float
+            width, height, xmin, ymin, xmax, ymax = float(width), float(height), float(xmin), float(ymin), float(xmax), float(ymax)
+            
+            # Label to numeric tag, YoloV5 format
+            clas_num = {"other":0, "lenin":1}[clas]
 
-        # Label to numeric tag, YoloV5 format
-        clas_num = {"other":0, "lenin":1}[clas]
+            # Convert box coordinates to YoloV5 format
+            box_width  = (xmax - xmin)/width
+            box_height = (ymax - ymin)/height
+            box_center_x = (xmax + xmin)/2.0/width
+            box_center_y = (ymax + ymin)/2.0/height
 
-        # Convert box coordinates to YoloV5 format
-        box_width  = (xmax - xmin)/width
-        box_height = (ymax - ymin)/height
-        box_center_x = (xmax + xmin)/2.0/width
-        box_center_y = (ymax + ymin)/2.0/height
-
-        # Set up file for annotation. Note that we need to append to
-        # file, as several labels may refer to the same file
-        fname = "./datasets/statues/labels/train/"+clas+"-"+fname
-        fname = fname.replace("JPG", "txt")
-        fname = fname.replace("jpg", "txt")
-        with open(fname, "a") as ofile:
-
-            ofile.write("{} {:.3f} {:.3f} {:.3f} {:.3f}\n".
-                        format(clas_num, box_center_x, box_center_y, box_width, box_height))
-
-            # If we have a statue of lenin, tag it also as a generic 'other'
+            yolo_label_string = img_label_dict.get(fname, "")
+            yolo_label_string += "{} {:.3f} {:.3f} {:.3f} {:.3f}\n".format(clas_num, box_center_x, box_center_y, box_width, box_height)
+            
+            # If we have a statue of lenin, also label it as a 'other'
             if clas_num == 1 :
-                ofile.write("{} {:.3f} {:.3f} {:.3f} {:.3f}\n".
-                            format(0, box_center_x, box_center_y, box_width, box_height))
+                yolo_label_string+=("{} {:.3f} {:.3f} {:.3f} {:.3f}\n".format(0, box_center_x, box_center_y, box_width, box_height))
 
-print(check_output("wc -l statues_labels.csv".split()).decode("utf-8"))
-print("Number of images containing Lenin:", len(lenin_names))
-print("Number of images containing other:", len(other_names))
+            img_label_dict[fname] = yolo_label_string
+
+    return img_label_dict
+
+def split_data(data, fraction, seed=None):
+    # Partition input data randomly into two subsets, the first of
+    # which is as long as the specified fraction relative to input.
+    rng = Random(seed)
+    rng.shuffle(data)
+    num_head = int(fraction*len(data))
+    head = data[:num_head]
+    tail = data[num_head:]
+    return data, data
+
+def remove_unlabelled(image_paths, label_dict):
+    ret = []
+    for pth in image_paths:
+        basename = path.basename(pth)
+        if basename not in label_dict:
+            print("Skipping unlabelled image", basename)
+        else:
+            ret.append(pth)
+    return ret
+
+if __name__ == "__main__":
+
+    # Get image paths and image labels
+    other_paths, lenin_paths = download_unzip_images()
+    fname_label_dict = download_convert_labels()
+
+    # Some images are unlabelled even though they all contain
+    # statues. Remove them for labelling consistency
+    other_paths = remove_unlabelled(other_paths, fname_label_dict)
+    lenin_paths = remove_unlabelled(lenin_paths, fname_label_dict)
+
+    # Split data set into training/validation subsets
+    train_fraction = 0.9
+    other_train_paths, other_valid_paths = split_data(other_paths, train_fraction)
+    lenin_train_paths, lenin_valid_paths = split_data(lenin_paths, train_fraction)
+
+    # Set up directory structure as expected by yolov5
+    rmtree("./datasets/statues/images/train/", ignore_errors=True)
+    rmtree("./datasets/statues/labels/train/", ignore_errors=True)
+    makedirs("./datasets/statues/images/train/", exist_ok=True)
+    makedirs("./datasets/statues/labels/train/", exist_ok=True)
+    
+    # Move training data to './datasets' as expected by yolov5. 
+    for pth in other_train_paths+lenin_train_paths:
+
+        basename = path.basename(pth)
+        tag = "lenin" if "lenin" in pth else "other"
+        image_path = f"./datasets/statues/images/train/{tag}-"+basename
+        copyfile(pth, image_path)
+
+        # Set up file path for annotation.
+        label_path = image_path
+        label_path = label_path.replace("JPG", "txt")
+        label_path = label_path.replace("jpg", "txt")
+        label_path = label_path.replace("images", "labels")
+        with open(label_path, "w") as ofile:
+            ofile.write(fname_label_dict[basename])
+
+
+# # Check duplicates. Saw that identical filename may appear both in
+# # lenin and in other directory, sometimes corresponding to identical
+# # pictures, sometimes not. Hence, make filenames unique below by
+# # prepending annotation tag.
+# duplicates = [name for name in lenin_names if name in other_names]
+# print("Duplicate file names:", duplicates)
+
+# new_lenin_paths = ["./datasets/statues/images/train/lenin-"+
+#                    name for name in lenin_names]
+# new_other_paths = ["./datasets/statues/images/train/other-"+
+#                    name for name in other_names]
+# for old_path, new_path in zip(lenin_paths, new_lenin_paths):
+#     copyfile(old_path, new_path)
+# for old_path, new_path in zip(other_paths, new_other_paths):
+#     copyfile(old_path, new_path)
+
+# # Save annotations in YoloV5 format
+# rmtree("./datasets/statues/labels/train/", ignore_errors=True)
+# makedirs("./datasets/statues/labels/train/", exist_ok=True)
+
+# print(check_output("wc -l statues_labels.csv".split()).decode("utf-8"))
+# print("Number of images containing Lenin:", len(lenin_names))
+# print("Number of images containing other:", len(other_names))
