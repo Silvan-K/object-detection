@@ -63,7 +63,7 @@ def download_convert_labels():
 
     return img_label_dict
 
-def split_data(data, fraction, seed=None):
+def split_data(data, fraction, seed):
     # Partition input data randomly into two subsets, the first of
     # which is as long as the specified fraction relative to input.
     rng = Random(seed)
@@ -71,7 +71,7 @@ def split_data(data, fraction, seed=None):
     num_head = int(fraction*len(data))
     head = data[:num_head]
     tail = data[num_head:]
-    return data, data
+    return head, tail
 
 def remove_unlabelled(image_paths, label_dict):
     ret = []
@@ -96,14 +96,18 @@ if __name__ == "__main__":
 
     # Split data set into training/validation subsets
     train_fraction = 0.9
-    other_train_paths, other_valid_paths = split_data(other_paths, train_fraction)
-    lenin_train_paths, lenin_valid_paths = split_data(lenin_paths, train_fraction)
+    other_train_paths, other_valid_paths = split_data(other_paths, train_fraction, 0)
+    lenin_train_paths, lenin_valid_paths = split_data(lenin_paths, train_fraction, 1)
 
     # Set up directory structure as expected by yolov5
     rmtree("./datasets/statues/images/train/", ignore_errors=True)
     rmtree("./datasets/statues/labels/train/", ignore_errors=True)
+    rmtree("./datasets/statues/images/val/", ignore_errors=True)
+    rmtree("./datasets/statues/labels/val/", ignore_errors=True)
     makedirs("./datasets/statues/images/train/", exist_ok=True)
     makedirs("./datasets/statues/labels/train/", exist_ok=True)
+    makedirs("./datasets/statues/images/val/", exist_ok=True)
+    makedirs("./datasets/statues/labels/val/", exist_ok=True)
     
     # Move training data to './datasets' as expected by yolov5. 
     for pth in other_train_paths+lenin_train_paths:
@@ -121,6 +125,20 @@ if __name__ == "__main__":
         with open(label_path, "w") as ofile:
             ofile.write(fname_label_dict[basename])
 
+    # Move validation data to './datasets' as expected by yolov5. 
+    for pth in other_valid_paths+lenin_valid_paths:
+        basename = path.basename(pth)
+        tag = "lenin" if "lenin" in pth else "other"
+        image_path = f"./datasets/statues/images/val/{tag}-"+basename
+        copyfile(pth, image_path)
+
+        # Set up file path for annotation.
+        label_path = image_path
+        label_path = label_path.replace("JPG", "txt")
+        label_path = label_path.replace("jpg", "txt")
+        label_path = label_path.replace("images", "labels")
+        with open(label_path, "w") as ofile:
+            ofile.write(fname_label_dict[basename])
 
 # # Check duplicates. Saw that identical filename may appear both in
 # # lenin and in other directory, sometimes corresponding to identical
