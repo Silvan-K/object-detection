@@ -1,15 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from subprocess import check_output
 from os import path, makedirs
 from glob import glob
 from shutil import copyfile, rmtree
 import csv
+import gdown
 
 # Download/unzip data using the links provided in email
-# print(check_output("gdown --id 18idZeW3IS1aUqXMypltL_WpZxa0C5opf".split()).decode("utf-8"))
-# print(check_output("gdown --id 1NpTPzQvkAyh9YPS8v_i7z_EZjRy9lYGs".split()).decode("utf-8"))
-# print(check_output("unzip -o statues-train.zip".split()).decode("utf-8"))
+if not path.exists("statues_labels.csv"):
+    gdown.download(id="18idZeW3IS1aUqXMypltL_WpZxa0C5opf")
+if not path.exists("statues-train.zip"):
+    gdown.download(id="1NpTPzQvkAyh9YPS8v_i7z_EZjRy9lYGs")
+if not path.exists("statues-train"):
+    print(check_output("unzip -o statues-train.zip".split()).decode("utf-8"))
 
 # Move images into directories as required by YoloV5. Note: need to
 # prefix image names with tag becaues file names are not unique.
@@ -36,7 +40,7 @@ for old_path, new_path in zip(other_paths, new_other_paths):
     copyfile(old_path, new_path)
 
 # Save annotations in YoloV5 format
-rmtree("./datasets/statues/labels/train/")
+rmtree("./datasets/statues/labels/train/", ignore_errors=True)
 makedirs("./datasets/statues/labels/train/", exist_ok=True)
 with open("statues_labels.csv", "r") as infile:
     reader = csv.reader(infile)
