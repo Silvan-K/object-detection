@@ -26,8 +26,9 @@ if __name__ == "__main__":
             y1 = int(box_center_y - box_height/2.0)
             y2 = int(box_center_y + box_height/2.0)
 
-            color = (0,0,255) if clas == 0 else (255,0,0)
-            cv2.rectangle(img, (x1, y1), (x2, y2), color, 6)
+            color = (255,0,0) if clas == 0 else (0,0,255)
+            width = 2 if clas == 0 else 6
+            cv2.rectangle(img, (x1, y1), (x2, y2), color, width)
 
     from os import path
     win_name = path.basename(args.image_path)
