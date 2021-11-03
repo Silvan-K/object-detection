@@ -7,5 +7,5 @@ path: ../datasets/statues        # dataset root dir
 train: images/train              # train images (relative to 'path')
 val: images/train                # val images (relative to 'path')
 test:                            # test images (optional)
-nc: 1                            # number of classes
-names: ['other']                 # class names
+nc: 2                            # number of classes
+names: ['other', 'lenin']        # class names

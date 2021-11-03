@@ -51,7 +51,7 @@ with open("statues_labels.csv", "r") as infile:
         width, height, xmin, ymin, xmax, ymax = float(width), float(height), float(xmin), float(ymin), float(xmax), float(ymax)
 
         # Label to numeric tag, YoloV5 format
-        clas_num = "0" # {"other":"0", "lenin":"1"}[clas]
+        clas_num = {"other":"0", "lenin":"1"}[clas]
 
         # Convert box coordinates to YoloV5 format
         box_width  = (xmax - xmin)/width
@@ -65,8 +65,14 @@ with open("statues_labels.csv", "r") as infile:
         fname = fname.replace("JPG", "txt")
         fname = fname.replace("jpg", "txt")
         with open(fname, "a") as ofile:
+
             ofile.write("{} {:.3f} {:.3f} {:.3f} {:.3f}\n".
                         format(clas_num, box_center_x, box_center_y, box_width, box_height))
+
+            # If we have a statue of lenin, tag it also as a generic 'other'
+            if clas_num == 1 :
+                ofile.write("{} {:.3f} {:.3f} {:.3f} {:.3f}\n".
+                            format(0, box_center_x, box_center_y, box_width, box_height))
 
 print(check_output("wc -l statues_labels.csv".split()).decode("utf-8"))
 print("Number of images containing Lenin:", len(lenin_names))
