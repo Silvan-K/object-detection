@@ -10,9 +10,9 @@ import gdown
 # Download/unzip data using the links provided in email
 if not path.exists("statues_labels.csv"):
     gdown.download(id="18idZeW3IS1aUqXMypltL_WpZxa0C5opf")
-if not path.exists("statues-train.zip"):
-    gdown.download(id="1NpTPzQvkAyh9YPS8v_i7z_EZjRy9lYGs")
 if not path.exists("statues-train"):
+    if not path.exists("statues-train.zip"):
+        gdown.download(id="1NpTPzQvkAyh9YPS8v_i7z_EZjRy9lYGs")
     print(check_output("unzip -o statues-train.zip".split()).decode("utf-8"))
 
 # Move images into directories as required by YoloV5. Note: need to
@@ -55,7 +55,7 @@ with open("statues_labels.csv", "r") as infile:
         width, height, xmin, ymin, xmax, ymax = float(width), float(height), float(xmin), float(ymin), float(xmax), float(ymax)
 
         # Label to numeric tag, YoloV5 format
-        clas_num = {"other":"0", "lenin":"1"}[clas]
+        clas_num = {"other":0, "lenin":1}[clas]
 
         # Convert box coordinates to YoloV5 format
         box_width  = (xmax - xmin)/width
