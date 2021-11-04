@@ -28,7 +28,7 @@ class LabelledBox():
         return (self.x1 - self.x0)*(self.y1 - self.y0)
 
     @staticmethod
-    def IOU(A, B):
+    def IOU(A, B, ignore_labels = False):
         """
         Calculate the intersection over union of the input boxes A and B
 
@@ -36,7 +36,7 @@ class LabelledBox():
 
         # Boxes with different labels are intepreted as
         # non-overlapping
-        if A.label != B.label:
+        if not ignore_labels and (A.label != B.label):
             return 0
 
         # Coordinates of intersection rectangle
