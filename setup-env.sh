@@ -8,3 +8,6 @@ source venv/bin/activate
 
 # Add yolov5 root directory to PYTHONPATH
 export PYTHONPATH=$PYTHONPATH:$(git rev-parse --show-toplevel)/yolov5/
+
+# Install dependencies
+pip install -r $(git rev-parse --show-toplevel)/yolov5/requirements.txt
