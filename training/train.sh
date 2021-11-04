@@ -4,9 +4,9 @@ set -e
 
 # The best model checkpoint saved to `weights/best_yolov5x_statues.pt`.
 
-cd yolov5
+cd ../yolov5
 python train.py --img 1280 --batch 8 --epochs 30 \
-       --data ../statues.yaml --cfg ./models/yolov5m.yaml --weights yolov5m.pt \
+       --data ../training/statues.yaml --cfg ./models/yolov5m.yaml --weights yolov5m.pt \
        --name yolov5m_statues --cache disk
 
 # Validating runs/train/yolov5m_statues/weights/best.pt...

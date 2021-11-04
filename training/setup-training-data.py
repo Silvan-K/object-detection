@@ -100,21 +100,21 @@ if __name__ == "__main__":
     lenin_train_paths, lenin_valid_paths = split_data(lenin_paths, train_fraction, 1)
 
     # Set up directory structure as expected by yolov5
-    rmtree("./datasets/statues/images/train/", ignore_errors=True)
-    rmtree("./datasets/statues/labels/train/", ignore_errors=True)
-    rmtree("./datasets/statues/images/val/", ignore_errors=True)
-    rmtree("./datasets/statues/labels/val/", ignore_errors=True)
-    makedirs("./datasets/statues/images/train/", exist_ok=True)
-    makedirs("./datasets/statues/labels/train/", exist_ok=True)
-    makedirs("./datasets/statues/images/val/", exist_ok=True)
-    makedirs("./datasets/statues/labels/val/", exist_ok=True)
+    rmtree("./images/train/", ignore_errors=True)
+    rmtree("./labels/train/", ignore_errors=True)
+    rmtree("./images/val/", ignore_errors=True)
+    rmtree("./labels/val/", ignore_errors=True)
+    makedirs("./images/train/", exist_ok=True)
+    makedirs("./labels/train/", exist_ok=True)
+    makedirs("./images/val/", exist_ok=True)
+    makedirs("./labels/val/", exist_ok=True)
     
     # Move training data to './datasets' as expected by yolov5. 
     for pth in other_train_paths+lenin_train_paths:
 
         basename = path.basename(pth)
         tag = "lenin" if "lenin" in pth else "other"
-        image_path = f"./datasets/statues/images/train/{tag}-"+basename
+        image_path = f"./images/train/{tag}-"+basename
         copyfile(pth, image_path)
 
         # Set up file path for annotation.
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     for pth in other_valid_paths+lenin_valid_paths:
         basename = path.basename(pth)
         tag = "lenin" if "lenin" in pth else "other"
-        image_path = f"./datasets/statues/images/val/{tag}-"+basename
+        image_path = f"./images/val/{tag}-"+basename
         copyfile(pth, image_path)
 
         # Set up file path for annotation.
