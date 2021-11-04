@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import csv
 from glob import glob
 import cv2
