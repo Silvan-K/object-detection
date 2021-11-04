@@ -18,10 +18,20 @@ source setup-env.sh
 
 # Running the statue detection model
 
-The statue detection model can be run using the main python script [detect-statues.py](https://git.toptal.com/felipe.batista/silvan-kuttimalai/-/blob/yolo/setup-env.sh):
+The statue detection model can be run using the main python script [detect-statues.py](https://git.toptal.com/felipe.batista/silvan-kuttimalai/-/blob/yolo/detect-statues.sh):
 
 ```
-python detect-images.py <PATH-TO-IMAGE> <RESULTS-FILE>
+python detect-images.py <PATH-TO-IMAGES> <RESULTS-FILE>
 ```
 
 It accepts as the first command line argument the path to the directory that contains the images to be processed. An optional second argument can be used to specify the path for the result text file (defaults to "results.csv"). The results file will contain one line per detected object in the format `image name;x1;y1;x2;y2;class`, where `(x1,y1)` and `(x2,y2)` are the coordinates of the upper left and lower right corners of the bounding box, respectively. The `class` tag is `1` if the object is identified as Lenin and `0` otherwise. 
+
+# Visualizing results
+
+The results generated via the [detect-statues.py](https://git.toptal.com/felipe.batista/silvan-kuttimalai/-/blob/yolo/detect-statues.py) script can be visualized using the [visualize-results.py](https://git.toptal.com/felipe.batista/silvan-kuttimalai/-/blob/yolo/visualize-results.py) script. The arguments passed to this script are the same as to the [detect-statues.py](https://git.toptal.com/felipe.batista/silvan-kuttimalai/-/blob/yolo/detect-statues.py) script, i.e.:
+
+```
+python visualize-results.py <PATH-TO-IMAGES> <RESULTS-FILE>
+```
+
+This will read in the results and show one image after another with the boxes and labels overlaid.
