@@ -7,21 +7,30 @@ from detect import run
 from glob import glob
 from os import path
 
-def label_convert(fname, line, img_height, img_width):
-    items = line.split()
-    clas = items[0]
-    box_center_x = float(items[1])*img_width
-    box_center_y = float(items[2])*img_height
-    box_width = float(items[3])*img_width
-    box_height = float(items[4])*img_height
+from helpers import LabelledBox
 
-    # Round to integer as we are converting to absolute pixel coords
-    x1 = round(box_center_x - 0.5*box_width)
-    x2 = round(box_center_x + 0.5*box_width)
-    y1 = round(box_center_y - 0.5*box_height)
-    y2 = round(box_center_y + 0.5*box_height)
+def filter_box_overlaps(boxes, threshold):
+    """
+    Filter out all boxes that are labelled 0 and overlap significantly
+    (IOU value above the specified threshold) with any of the boxes
+    labelled 1.
 
-    return f"{fname};{x1};{y1};{x2};{y2};{clas}\n"
+    """
+
+    lenin_boxes = [box for box in boxes if box.label==1]
+    other_boxes = [box for box in boxes if box.label==0]
+    keep_other_boxes = []
+
+    for o_box in other_boxes:
+        overlaps = False
+        for l_box in lenin_boxes:
+            if LabelledBox.IOU(l_box, o_box, True) > threshold:
+                overlaps = True
+                break
+        if not overlaps:
+            keep_other_boxes.append(o_box)
+
+    return lenin_boxes + keep_other_boxes
 
 if __name__ == "__main__":
 
@@ -65,7 +74,13 @@ if __name__ == "__main__":
             resfile = "labels/"+".".join(path.basename(infile).split(".")[:-1])+".txt"
             with open(resfile, "r") as readfile:
 
-                # Append each detected object to the main results file
-                for line in readfile:
-                    outfile.write(label_convert(path.basename(infile),
-                                                line, img_height, img_width))
+                # Parse all boxes for this image
+                boxes = [LabelledBox.from_yolo_string(line, img_height, img_width)
+                         for line in readfile]
+
+                # Remove generic boxes that overlap with lenin boxes
+                boxes = filter_box_overlaps(boxes, 0.9)
+
+                # Dump results to text file
+                for box in boxes:
+                    outfile.write(f"{path.basename(infile)};{box.x0};{box.y0};{box.x1};{box.y1};{box.label}\n")
