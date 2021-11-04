@@ -139,27 +139,3 @@ if __name__ == "__main__":
         label_path = label_path.replace("images", "labels")
         with open(label_path, "w") as ofile:
             ofile.write(fname_label_dict[basename])
-
-# # Check duplicates. Saw that identical filename may appear both in
-# # lenin and in other directory, sometimes corresponding to identical
-# # pictures, sometimes not. Hence, make filenames unique below by
-# # prepending annotation tag.
-# duplicates = [name for name in lenin_names if name in other_names]
-# print("Duplicate file names:", duplicates)
-
-# new_lenin_paths = ["./datasets/statues/images/train/lenin-"+
-#                    name for name in lenin_names]
-# new_other_paths = ["./datasets/statues/images/train/other-"+
-#                    name for name in other_names]
-# for old_path, new_path in zip(lenin_paths, new_lenin_paths):
-#     copyfile(old_path, new_path)
-# for old_path, new_path in zip(other_paths, new_other_paths):
-#     copyfile(old_path, new_path)
-
-# # Save annotations in YoloV5 format
-# rmtree("./datasets/statues/labels/train/", ignore_errors=True)
-# makedirs("./datasets/statues/labels/train/", exist_ok=True)
-
-# print(check_output("wc -l statues_labels.csv".split()).decode("utf-8"))
-# print("Number of images containing Lenin:", len(lenin_names))
-# print("Number of images containing other:", len(other_names))
