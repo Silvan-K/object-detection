@@ -1,2 +1,10 @@
+#!/bin/bash
+
+# Create virtual environment if it doesn't exist yet
+[ -d "./venv" ] || virtualenv venv
+
+# Activate virtual env
 source venv/bin/activate
+
+# Add yolov5 root directory to PYTHONPATH
 export PYTHONPATH=$PYTHONPATH:$(git rev-parse --show-toplevel)/yolov5/
