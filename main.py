@@ -13,7 +13,7 @@ def label_convert(fname, line, img_height, img_width):
     box_center_x = float(items[1])*img_width
     box_center_y = float(items[2])*img_height
     box_width = float(items[3])*img_width
-    box_height = float(items[3])*img_height
+    box_height = float(items[4])*img_height
 
     # Round to integer as we are converting to absolute pixel coords
     x1 = round(box_center_x - 0.5*box_width)
