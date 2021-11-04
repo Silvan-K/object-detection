@@ -1,9 +1,11 @@
+"""Visualize bounding boxes stored in yolov5 text form"""
+
 if __name__ == "__main__":
 
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument("image_path")
-    parser.add_argument("label_path")
+    parser.add_argument("image_path", help="Input image path")
+    parser.add_argument("label_path", help="Path to text file containing bounding boxes in yolov5 format")
     args = parser.parse_args()
 
     import cv2
