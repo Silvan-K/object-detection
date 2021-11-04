@@ -64,6 +64,8 @@ if __name__ == "__main__":
             # file extension replaced by ".txt"
             resfile = "labels/"+".".join(path.basename(infile).split(".")[:-1])+".txt"
             with open(resfile, "r") as readfile:
+
+                # Append each detected object to the main results file
                 for line in readfile:
                     outfile.write(label_convert(path.basename(infile),
                                                 line, img_height, img_width))
