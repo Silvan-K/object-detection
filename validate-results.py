@@ -1,4 +1,6 @@
 import csv
+from glob import glob
+import cv2
 
 class LabelledBox():
 
@@ -109,15 +111,24 @@ def parse_oracle_boxes(path):
         while True:
             try: fname, width, height, cls, xmin, ymin, xmax, ymax = next(reader)
             except StopIteration: break
-            
+
             # Convert to numeric formats
-            width, height = int(width), int(height)
-            xmin, xmax = int(xmin), int(xmax),
-            ymin, ymax = int(ymin), int(ymax)
+            width, height = float(width), float(height)
+            xmin, xmax = float(xmin), float(xmax),
+            ymin, ymax = float(ymin), float(ymax)
             cls = {"lenin":1, "other":0}[cls]
 
+            # Need actual image dimensions since box coordinates in
+            # oracle file are sometimes for re-sized image
+            actual_height, actual_width, _ = \
+                cv2.imread(glob(f"datasets/statues/images/*/*-{fname}")[0]).shape
+            xmin *= actual_width/width
+            xmax *= actual_width/width
+            ymin *= actual_height/height
+            ymax *= actual_height/height
+
             # Create box and append to appropriate list of boxes
-            box = LabelledBox(4*xmin, 4*xmax, 4*ymin, 4*ymax, cls)
+            box = LabelledBox(int(xmin), int(xmax), int(ymin), int(ymax), cls)
             boxes_by_images.setdefault(fname, []).append(box)
         
     return boxes_by_images
@@ -131,13 +142,12 @@ def find_match(result_box, oracle_boxes):
 
 def show_image(path, boxes):
     
-    import cv2
     img = cv2.imread(path)
     for box in boxes:
-
         color = (255,0,0) if box.label == 0 else (0,0,255)
         width = 2 if box.label == 0 else 6
-        cv2.rectangle(img, (box.x0, box.y0), (box.x1, box.y1), color, width)
+        cv2.rectangle(img, (box.x0, box.y0),
+                      (box.x1, box.y1), color, width)
 
     from os.path import basename
     win_name = basename(path)
@@ -153,7 +163,7 @@ if __name__ == "__main__":
     parser.add_argument("--result-path", help="Path to result text file", nargs="*", default="./results.csv")
     parser.add_argument("--oracle-path", help="Path to oracle text file", nargs="*", default="./statues_labels.csv")
     args = parser.parse_args()
-    
+
     oracle_boxes_by_image = parse_oracle_boxes(args.oracle_path)
     result_boxes_by_image = parse_result_boxes(args.result_path)
 
@@ -166,16 +176,7 @@ if __name__ == "__main__":
         oracle_boxes = oracle_boxes_by_image[image.replace("lenin-", "").replace("other-", "")]
         result_boxes = result_boxes_by_image[image]
 
-        print(oracle_boxes[0].x0,
-              oracle_boxes[0].x1,
-              oracle_boxes[0].y0,
-              oracle_boxes[0].y1)
-        print(result_boxes[0].x0,
-              result_boxes[0].x1,
-              result_boxes[0].y0,
-              result_boxes[0].y1)
-
-        show_image("datasets/statues/images/val/"+image, result_boxes)
+        show_image("datasets/statues/images/val/"+image, oracle_boxes)
 
         matched_boxes = set()
         for r_box in result_boxes:
@@ -190,7 +191,7 @@ if __name__ == "__main__":
         # we have found a match within our detected boxes. Remaining
         # boxes in oracle set are undetected boxes, i.e. false
         # negatives
-        FN += len(result_boxes) - len(matched_boxes)
+        FN += len(oracle_boxes) - len(matched_boxes)
 
     num_oracle_boxes = sum([len(boxes) for boxes in oracle_boxes_by_image.values()])
     #assert(TP+FN == num_oracle_boxes)
