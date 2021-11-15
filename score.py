@@ -2,7 +2,7 @@ f = open("answers.csv", "r")
 answers = sorted(f.read().split("\n"))
 f.close()
 
-f = open("result.csv", "r")
+f = open("results.csv", "r")
 results = sorted(f.read().split("\n"))
 f.close()
 
