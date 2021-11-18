@@ -1,0 +1,131 @@
+x Update list of publications
+x Carry over teaching section
+x Remove soft skills
+x Remove technical skills
+x Consider renaming 'academic appointments' -> 'research experience'
+x Add research interest summary
+x Merge both 1QBit jobs
+x Consider removing languages
+x Expand education section into three items, including thesis title etc...
+x Create list of talks
+x Check page numbers on CV
+x Remove GitHub link
+x Remove or adapt summary
+x Reduce size to 1.0\linewidth
+x Unify layout of 1st page and publication list (node positions, table formats, etc)
+x Can we get rid of these 1.2-linewidth-parboxes?
+
+==================================================
+# ToDo
+==================================================
+
+- Re-read hand-written notes on project
+- Read notes on last interview
+
+- Mean average precision
+- Precision
+- Recall
+
+==================================================
+# General stuff
+==================================================
+
+- Batch normalization: input distributions to layers deep in the
+  network vary from batch to batch and parameter update to parameter
+  update. Makes training unstable. Thus, normalize batch mean and
+  variance to 0 and 1 respectively before layer. Restore
+  representation power of network by adding learnable scale-factor and
+  bias back.
+
+- Batch size: Large batches -> more accurate gradient. But large batch
+  sizes require large memory as more results have to be computed at
+  once. Too large batch size also lead to poor generalization
+  (apparently not 100% understood). Also, true gradient direction may
+  not point in most optimal direction anyways. Good starting point is
+  32. We were on the lower side of that.
+  
+- Dropout: Regularization method (reduce fitting power of fct) to
+  improve generalization/avoid overfitting. Achieved by randomly
+  removing weights from network during training phases
+
+- Momentum \mu in SGD: at step t, update the parameter \theta as
+  follows:
+
+  \theta_{t+1} = \theta_{t} - \Delta\theta_{t+1}
+
+  where
+
+  \Delta\theta_{t+1} = \gamma\grad F + \mu\Delta\theta_{t}
+
+  i.e. mix in the previous gradient to smooth out the walk towards
+  optimium.
+
+==================================================
+# Training
+==================================================
+
+- Yolo offers optimizer hyperparameter evolution via genetic algorithm
+- Used SGD algo (Adam available)
+
+- Know learning rates and other training params used:
+  + lr0: 0.01  # initial learning rate
+  + lrf:  0.1  # final learning rate = lr0 * lrf
+  + learning rate schedule: cosine decay. Decrease slowly at beginning, then roughly linear, then slowly
+  + momentum: 0.937
+  + Weight decay: 5e-4
+  + Exclude batch norm parameters from L2 regularization (and also biases typically)
+  + L1/L2 regularization: add sum of abs values/squares of weights to objective FCT, with multiplier 'weigth decay'.
+    Reduces overfitting by penalizing many parameters.
+   
+==================================================
+# Data augmentation
+==================================================
+
+- Geometric distortion such as scaling, flipping rotating
+- Image occlusion, e.g. by random erasure of squares
+
+==================================================
+# Non-maximum suppression
+==================================================
+
+Perform the following for each class separately (IMPORTANT AS "LENIN"
+AND "OTHER" boxes will generally overlap fully!)
+
+- Select the proposal with highest confidence score, remove it from B
+  and add it to the final proposal list D. (Initially D is empty).
+
+- Compare this proposal with all the proposals — calculate the IOU of
+  this proposal with every other proposal. If the IOU is greater than
+  the threshold N, remove that proposal from B.
+
+- Again take the proposal with the highest confidence from the
+  remaining proposals in B and remove it from B and add it to D.
+
+- Once again calculate the IOU of this proposal with all the proposals
+  in B and eliminate the boxes which have high IOU than threshold.
+  This process is repeated until there are no more proposals left in
+  B.
+		    
+==================================================
+# Yolo architecture
+==================================================
+
+- Reframe problem as regression
+- Divide img into SxS grid
+- Each cell responsible for detecting objects whose center falls into it
+- Each cell predicts
+  + B bounding boxes and scores, each prediction being (x,y,w,h,score)
+  + C (num-class) conditional probabilities Pr(object present| object == class i) for i in num-cls
+    [note that these probabilities are NOT per box but per cell
+- Yolov5: 140 fps on modern GPU
+- Yolov5: Mosaic: combine four images into one mosaic during training
+- Yolov5: Mixup: make linear combination of two images weighted with random proportion drawn from beta distribution, attach both labels
+- Yolov5: Perspective changes, i.e. distortion augmentation
+
+==================================================
+# Multi-stage detectors
+==================================================
+
+- Very old approach: sliding windows
+- Region-proposal -> classification -> refining bounding boxes
+- RCNN: Selective search -> CNN(features) -> SVM(scoring) -> BBox adjustment -> NMS
